@@ -1,0 +1,62 @@
+{% extends 'base.html' %} {% block container %}
+<div id="search-results">
+  <div id="results">{{ docs|length }} Results</div>
+  <select name="sort" id="sort" onchange="dropdownRedirect()">
+    <option value="newest">Newest</option>
+    <option value="oldest">Oldest</option>
+    <option value="lowest">Lowest Price</option>
+    <option value="highest">Highest Price</option>
+  </select>
+</div>
+
+<div id="listings">
+  {% for doc in docs %}
+    <div class="listing" onclick="window.location.href='/item/{{ doc._id }}'">
+      <div class="listing-image">
+        <img
+          src="{{ doc.image_url }}"
+          alt="{{ doc.title }}"
+          referrerpolicy="no-referrer"
+        />
+      </div>
+      <div class="details">
+        <div class="details-primary">
+          <p>{{ doc.name }}</p>
+          <p>${{ doc.price }}</p>
+        </div>
+        <p>{{ doc.description }}</p>
+      </div>
+    </div>
+  </if>
+  {% endfor %}
+</div>
+
+<script>
+  // retrieve the sorting dropdown
+  const dropdown = document.getElementById("sort");
+
+  /**
+   * Automatically sets the selected sorting option in the dropdown based on the URL parameter.
+   */
+  (() => {
+    // parse the URL parameter
+    const searchParams = new URLSearchParams(window.location.search);
+    const sortValue = searchParams.get("sort");
+    // set the selected sorting option in the dropdown, if valid
+    if (
+      sortValue &&
+      Array.from(dropdown.options).some((option) => option.value === sortValue)
+    ) {
+      dropdown.value = sortValue;
+    }
+  })();
+
+  /**
+   * Redirects the user to the homepage with a specified sorting option.
+   */
+  function dropdownRedirect() {
+    window.location.href = "/?sort=" + dropdown.value;
+  }
+</script>
+
+{% endblock %}

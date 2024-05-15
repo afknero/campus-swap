@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  p5-web-app:
+    build:
+      context: ./src
+      dockerfile: ./Dockerfile
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE="Cluster0"
+
+volumes:
+  mongo-data:
+  
+  

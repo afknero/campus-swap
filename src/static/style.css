@@ -1,0 +1,758 @@
+* {
+  box-sizing: border-box;
+  margin: 0px;
+}
+
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  height: 80px;
+  width: 100%;
+  padding: 0rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #56018d;
+  color: #ededed;
+}
+
+header a {
+  text-decoration: none;
+  color: inherit;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+#nav-offset {
+  width: 33px;
+}
+
+main {
+  border-bottom: 1px solid black;
+  font-size: 1rem;
+  margin-top: 80px;
+}
+
+footer {
+  background-color: #ededed;
+  height: 20vh;
+  padding: 2rem;
+}
+
+#menuToggle {
+  z-index: 1;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#menuToggle a {
+  text-decoration: none;
+  color: #56018d;
+  transition: color 0.3s ease;
+}
+
+#menuToggle a:hover {
+  color: tomato;
+}
+
+#menuToggle input {
+  width: 28px;
+  height: 28px;
+  position: absolute;
+  cursor: pointer;
+  opacity: 0;
+  /* hide this */
+  z-index: 2;
+  /* and place it over the hamburger */
+  -webkit-touch-callout: none;
+}
+
+/*
+ * Just a quick hamburger
+ */
+#menuToggle span {
+  display: block;
+  width: 30px;
+  height: 4px;
+  margin: 4px 0px;
+  background: #ededed;
+  border-radius: 3px;
+  z-index: 1;
+  transform-origin: 4px 0px;
+  transition: transform 0.5s cubic-bezier(0.77, 0.2, 0.05, 1),
+    background 0.5s cubic-bezier(0.77, 0.2, 0.05, 1), opacity 0.55s ease;
+}
+
+#menuToggle span:first-child {
+  transform-origin: 0% 0%;
+}
+
+#menuToggle span:nth-last-child(2) {
+  transform-origin: 0% 100%;
+}
+
+/* 
+ * Transform all the slices of hamburger
+ * into a crossmark.
+ */
+#menuToggle input:checked ~ span {
+  opacity: 1;
+  transform: rotate(-45deg) translate(0px, 0px);
+  background-color: #56018d;
+  position: relative;
+}
+
+/*
+ * But let's hide the middle one.
+ */
+#menuToggle input:checked ~ span:nth-child(2) {
+  transform: rotate(45deg) translate(-2px, 0px);
+}
+
+/*
+* Ohyeah and the last one should go the other direction
+*/
+#menuToggle input:checked ~ span:nth-last-child(3) {
+  opacity: 0;
+}
+
+/*
+ * Make this absolute positioned
+ * at the top left of the screen
+ */
+#menu {
+  position: absolute;
+  height: 100vh;
+  width: 70%;
+  margin: -54px 0 0 -32px;
+  padding: 24px;
+  padding-top: 112px;
+  background: #ededed;
+  list-style-type: none;
+  -webkit-font-smoothing: antialiased;
+  /* to stop flickering of text in safari */
+  transform-origin: 0% 0%;
+  transform: translate(-400%, 0);
+
+  transition: transform 0.5s cubic-bezier(0.77, 0.2, 0.05, 1);
+}
+
+#menu li {
+  padding: 10px 0;
+  font-size: 22px;
+}
+
+/*
+ * And let's slide it in from the left
+ */
+#menuToggle input:checked ~ ul {
+  transform: none;
+}
+
+#search-results {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+}
+
+#results {
+  font-size: large;
+  font-weight: bold;
+}
+
+#sort {
+  min-width: 7rem;
+  height: 2rem;
+  text-align: center;
+  background-color: white;
+  border: 2px solid #56018d;
+  border-radius: 0.5em;
+  font-size: large;
+}
+
+#listings {
+  margin: 0rem 2rem 1rem 2rem;
+  /* display: grid;
+  grid-template-columns: 1fr;
+  grid-gap: 1rem; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.listing {
+  height: 350px;
+  border: 3px solid #56018d;
+  box-sizing: border-box;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.listing-image {
+  height: 250px;
+  overflow: hidden;
+}
+
+.listing img {
+  width: 100%;
+  height: auto;
+}
+
+.details {
+  height: 100px;
+  padding: 1rem;
+  background-color: #ededed;
+  font-size: 1.1rem;
+}
+
+.details-primary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 20px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.details > p {
+  height: 38px;
+  overflow: hidden;
+}
+
+/* Alternative listing styling used in 'Your Listings' page */
+.listing-alt {
+  border: 3px solid #56018d;
+  box-sizing: border-box;
+  border-radius: 0.5rem;
+  width: 370px;
+}
+
+.listing-context-alt {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 175px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.listing-image-alt {
+  max-width: 100px;
+  overflow: hidden;
+}
+
+.listing-alt img {
+  height: 100%;
+  width: 100px;
+}
+
+.details-alt {
+  padding: 1rem;
+  width: 264px;
+}
+
+.details-alt > p {
+  height: 38px;
+  overflow: hidden;
+}
+
+#profile {
+  display: flex;
+  flex-direction: column;
+}
+
+#profile-header{
+  padding: 2rem;
+}
+
+#new-listing,
+#browse-collection > div{
+  display: flex;
+  background-color: #56018d;
+  height: 40px;
+  align-items: center;
+  padding: 1.2rem;
+  border-radius: 0.5rem;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+#new-listing input,
+#browse-collection > div input {
+  width: 100%;
+  background-color: #56018d;
+  color: #ededed;
+  display: flex;
+  border: none;
+  font-weight: bold;
+}
+
+.item-buttons {
+  display: flex;
+  justify-content: space-evenly;
+  padding-bottom: 1rem;
+}
+
+.item-buttons a {
+  width: 32%;
+  text-align: center;
+  box-sizing: border-box;
+  background-color: #56018d;
+  color: #ededed;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.2rem;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  min-height: 80vh;
+}
+
+.item-alt {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-image {
+  border-bottom: 2px solid silver;
+  box-sizing: border-box;
+  background-color: #ededed;
+}
+
+.item img,
+.item-alt img {
+  display: block;
+  margin: 0 auto;
+  max-width: 80%;
+  max-height: 400px;
+}
+
+#item-content {
+  margin: 2rem;
+}
+
+#item-content p {
+  margin: 0.2rem 0;
+}
+
+#item-primary {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+#item-details {
+  font-size: 1.1rem;
+  margin-top: 1rem;
+}
+
+#login-signup {
+  display: flex;
+  flex-direction: row;
+}
+
+#login-signup a {
+  width: 50%;
+  padding: 1rem;
+  font-size: 1.1rem;
+  text-align: center;
+  box-sizing: border-box;
+  font-weight: bold;
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.active {
+  border-bottom: 2px solid #56018d;
+}
+
+form {
+  height: 75vh;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+form div {
+  width: 90%;
+}
+
+form div input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: inherit;
+  border: 2px solid #56018d;
+  border-radius: 8px;
+  margin-top: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+form div label {
+  font-size: 1.1rem;
+}
+
+#form-submit input {
+  background-color: #56018d;
+  color: #ededed;
+}
+
+.instruction {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.instruction-step {
+  background-color: #56018d;
+  color: #ededed;
+  border-radius: 100%;
+  width: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.instruction-details {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+}
+
+.step input,
+.step textarea {
+  width: 90%;
+  margin: 1rem;
+}
+
+.step textarea {
+  height: 100px;
+  padding: 0.5rem;
+  border: 2px solid #56018d;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+#add-edit input[type='submit'] {
+  width: 300px;
+  box-sizing: border-box;
+  background-color: #56018d;
+  color: #ededed;
+  cursor: pointer;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin: 1rem;
+}
+
+#add-edit-header {
+  width: 100%;
+  margin-bottom: 2rem;
+  font-size: 1.2rem;
+  display: flex;
+  justify-content: center;
+}
+
+#profile-header img {
+  border-radius: 40%;
+  float: left;
+  margin-right: 1em;
+}
+
+.edit-profile-pic {
+  display: block;
+  margin: auto;
+  width: 20%;
+}
+
+.edit-profile-btn {
+  text-align: center;
+  box-sizing: border-box;
+  background-color: #56018d;
+  color: #ededed;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 1rem;
+  border: #56018d 1px solid;
+  border-radius: 10px;
+  font-size: 1.2rem;
+}
+
+.edit-profile-btn:hover {
+  border: #56018d solid 1px;
+  background-color: white;
+  color: #56018d;
+}
+
+.edit-profile-btn:active {
+  border: #56018d solid 1px;
+  background-color: #56018d;
+  color: white;
+}
+
+.friends-tag {
+  text-align: center;
+  box-sizing: border-box;
+  background-color: white;
+  color: #56018d;
+  text-decoration: none;
+  padding: 0.4rem;
+  border: #56018d 1px solid;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  pointer-events: none;
+}
+
+#friends {
+  margin: 1em;
+}
+.friend-listing {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  border: #56018d solid 2px;
+  border-radius: 10px;
+  padding: 1em;
+  margin: 1em;
+}
+.friend-user {
+  font-size: 2em;
+  color: #56018d;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+.friend-image img {
+  border-radius: 50%;
+}
+
+#offer-items {
+  border-top: 2px solid #56018d;
+}
+
+.offer-header {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 1rem 1rem 2rem 1rem;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+#offer-form {
+  padding: 0rem;
+  height: auto;
+}
+
+#offer-form input {
+  margin: 0;
+}
+
+#offer-submit {
+  background-color: #56018d;
+  color: white;
+  width: 90%;
+}
+
+.offer-details {
+  padding: 1rem 0rem 1rem 3rem;
+  min-width: 240px;
+  font-size: 1.1rem;
+  display: flex;
+}
+
+.offer-details > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.offer-details > p {
+  height: 38px;
+  overflow: hidden;
+}
+
+.offer-details input[type='checkbox'] {
+  height: 24px;
+}
+
+#offers-sent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 80vh;
+}
+
+.offer-sent {
+  box-sizing: border-box;
+  width: 100%;
+  border-bottom: 3px solid #56018d;
+}
+
+.offer-image {
+  width: 100px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border: 3px solid #56018d;
+  border-radius: 16px;
+}
+
+.offer-image-alt {
+  width: 100px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border: 3px solid #56018d;
+  border-radius: 16px;
+}
+
+.offer-sent img {
+  height: 100%;
+  width: 100px;
+}
+
+.offer-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-wanted {
+  width: 183px;
+  height: 150px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+.swap-icon {
+  width: 60px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.swap-icon img {
+  width: 48px;
+  height: 48px;
+}
+
+.items-offered {
+  width: 183px;
+  height: 150px;
+}
+
+
+.items-transformed {
+  position: relative;
+}
+
+.offer-image-alt {
+  position: absolute;
+}
+
+.offer-image-alt:nth-child(2) {
+  top: -20px;
+  left: 20px;
+  z-index: -1;
+}
+
+.offer-image-alt:nth-child(3) {
+  top: -40px;
+  left: 40px;
+  z-index: -2;
+}
+
+.offer-details-alt {
+  display: flex;
+  justify-content: space-evenly;
+  font-size: large;
+  margin-top: 1rem;
+}
+
+.offer-details-alt > div:nth-child(1) {
+  width: 50%;
+  margin: 0rem 0rem 0rem 3rem;
+}
+
+.offer-details-alt > div:nth-child(2) {
+  width: 50%;
+  margin: 0rem 3rem 0rem 0rem;
+}
+
+.item-buttons-alt {
+  display: flex;
+  justify-content: center;
+}
+
+.item-buttons-alt a{
+  width: 33%;
+  text-align: center;
+  box-sizing: border-box;
+  background-color: #56018d;
+  color: #ededed;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin: 1rem;
+}
+
+#browse {
+  margin: 1rem;
+}
+
+#browse-collection {
+  margin: 1rem;
+}
+
+#profile-header > div:nth-child(1) {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+#profile-header > div:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  font-size: 1.2rem;
+}
+
+#profile-header > div:nth-child(2) div {
+  margin-bottom: 1rem;
+}
+
+.profile-username {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin: 0.5rem;
+  max-width: 256px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+@media (min-width: 600px) {
+  header,
+  footer {
+    padding: 2rem 4rem;
+  }
+
+  header,
+  main {
+    border-bottom: 1px solid;
+  }
+}

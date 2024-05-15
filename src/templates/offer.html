@@ -1,0 +1,66 @@
+{% extends 'base.html' %} {% block container %}
+<div class="item-alt">
+  <div class="item-image">
+    <img
+      src="{{ founditem.image_url }}"
+      alt="{{ founditem.name }}"
+      referrerpolicy="no-referrer"
+    />
+  </div>
+  <div id="item-content">
+    <div id="item-primary">
+      <p>Trading for: {{ founditem.name }}</p>
+      <p>Value : ${{ founditem.price }}</p>
+    </div>
+    <div id="item-details">
+      <p><strong>Description: </strong>{{ founditem.description }}</p>
+      <p>Sold By: {{ founditem.username }}</p>
+    </div>
+  </div>
+</div>
+
+<div id="offer-items">
+  <div class="offer-header">Your Items</div>
+  <form
+    method="POST"
+    action="{{url_for('new_offer', item_id = founditem._id)}}"
+    id="offer-form"
+  >
+    <div id="listings">
+      {% if docs|length == 0 %}
+      <div id="new-listing" onclick="window.location.href='/add'">
+        <img
+          src="https://cdn-icons-png.freepik.com/512/8333/8333955.png"
+          alt="Add Item"
+          width="30px"
+          height="30px"
+        />
+        <input type="submit" value="NEW LISTING" />
+      </div>
+      {%endif%} {% for doc in docs %}
+      <div class="listing-alt">
+        <div class="listing-context-alt">
+          <div class="listing-image-alt">
+            <img
+              src="{{ doc.image_url }}"
+              alt="{{ doc.title }}"
+              referrerpolicy="no-referrer"
+            />
+          </div>
+          <div class="offer-details">
+            <div>
+              <p>{{ doc.name }}</p>
+              <p>${{ doc.price }}</p>
+            </div>
+            <div>
+              <input type="checkbox" value="{{doc._id}}" name="mycheckbox" />
+            </div>
+          </div>
+        </div>
+      </div>
+      {%endfor%}
+      <input type="submit" id="offer-submit" />
+    </div>
+  </form>
+</div>
+{% endblock %}

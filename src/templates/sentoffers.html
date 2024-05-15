@@ -1,0 +1,94 @@
+{% extends 'base.html' %} {% block container %}
+
+<div id="offers-sent">
+  {% if not offers %}
+  <!-- if no offers sent then have browse items button -->
+  <div id="browse">
+    <img
+      src="{{ url_for('static', filename='browse.jpg') }}"
+      alt="user profile image"
+      width="400px"
+    />
+
+    <div id="browse-collection" onclick="window.location.href='/'">
+      <div>
+        <img
+          src="https://cdn-icons-png.freepik.com/512/8333/8333955.png"
+          alt="Add Item"
+          width="30px"
+          height="30px"
+        />
+        <input type="submit" value="NO OFFERS FOUND. CLICK TO BROWSE." />
+      </div>
+    </div>
+  </div>
+  {% else %} {% for offer in offers %}
+  <div class="offer-sent">
+    <div class="offer-header" style="margin: 1rem 1rem calc(1rem * {{ offer.offereditems|length }}) 1rem;">
+      <div>Their Item</div>
+      <div>Your Item{% if offer.offereditems|length > 1 %}s{% endif %}</div>
+    </div>
+
+    <div class="offer-content">
+      <div class="item-wanted">
+        <div class="offer-image">
+          <img
+            src="{{ offer.offerforid.image_url }}"
+            alt="{{ offer.offerforid.name }}"
+            referrerpolicy="no-referrer"
+          />
+        </div>
+      </div>
+
+      <div class="swap-icon">
+        <img
+          src="https://cdn-icons-png.freepik.com/512/10477/10477833.png"
+          alt="Add Item"
+          width="30px"
+          height="30px"
+        />
+      </div>
+
+      <div class="items-offered">
+        <div class="items-transformed">
+          {% for item in offer.offereditems %}
+          <div class="offer-image-alt">
+            <img
+              src="{{ item.image_url }}"
+              alt="{{ item.name }}"
+              referrerpolicy="no-referrer"
+            />
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="offer-details-alt">
+      <div>
+        <ul>
+          <li>{{offer.offerforid.name}}</li>
+        </ul>
+      </div>
+
+      <div>
+        <ul>
+          {% for item in offer.offereditems %}
+          <li>{{item.name}}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="item-buttons-alt">
+      <a href="{{url_for('deleteoffer', offer_id = offer._id)}}">Edit Offer</a>
+      <br />
+      <a href="{{url_for('deleteoffer', offer_id = offer._id)}}"
+        >Delete Offer</a
+      >
+    </div>
+  </div>
+  {% endfor %} {% endif %}
+</div>
+
+{% endblock %}

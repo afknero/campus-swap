@@ -1,0 +1,34 @@
+{% extends 'base.html' %} {% block container %}
+<div id="login-signup">
+  <a href="{{ url_for('log_in') }}" class="active">Log In</a>
+  <a href="{{ url_for('sign_up') }}">Sign Up</a>
+</div>
+
+<form method="POST" action="{{ url_for('log_in')}}" id="login-signup-form">
+  <div>
+    <label for="fusername">Username</label><br />
+    <input
+      type="text"
+      id="fusername"
+      name="fusername"
+      placeholder="Username"
+      required
+    />
+  </div>
+  <div>
+    <label for="fusername">Password</label><br />
+    <input
+      type="password"
+      id="fpassword"
+      name="fpassword"
+      placeholder="Enter a Password"
+      required
+    />
+  </div>
+  <div id="form-submit">
+    <input type="submit" value="Log In" />
+  </div>
+</form>
+{% if error %}
+<p>{{error}}</p>
+{% endif %} {% endblock %}

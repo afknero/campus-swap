@@ -1,0 +1,46 @@
+{% extends 'base.html' %} 
+
+{% block container %}
+<form method="POST" action="{{url_for('update_item', item_id = item_id)}}" id="add-edit">
+  <div id="add-edit-header">Edit A Listing</div>
+  <div class="step">
+    <div class="instruction">
+      <div class="instruction-step">1</div>
+      <div class="instruction-details">ADD PRODUCT TITLE</div>
+    </div>
+    <input type="text" id="itemname" name="itemname" value="{{founditem.name}}" />
+  </div>
+  <div class="step">
+    <div class="instruction">
+      <div class="instruction-step">2</div>
+      <div class="instruction-details">ADD PRODUCT DESCRIPTION</div>
+    </div>
+    <textarea 
+      type="text" 
+      id="description" 
+      name="description">{{founditem.description}}
+    </textarea>
+  </div>
+  <div class="step">
+    <div class="instruction">
+      <div class="instruction-step">3</div>
+      <div class="instruction-details">ADD PRODUCT PRICE</div>
+    </div>
+    <input
+      type="number"
+      step="0.01"
+      id="price"
+      name="price"
+      value="{{founditem.price}}"
+    />
+  </div>
+  <div class="step">
+    <div class="instruction">
+      <div class="instruction-step">4</div>
+      <div class="instruction-details">ADD PRODUCT IMAGE URL</div>
+    </div>
+    <input type="test" id="url" name="url" value="{{founditem.image_url}}" />
+  </div>
+  <input type="submit" value="Save" />
+</form>
+{% endblock %}

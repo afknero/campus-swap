@@ -1,0 +1,52 @@
+{% extends 'base.html' %} {% block container %}
+
+<div id="profile">
+  <div id="profile-header">
+    <div>
+      <img
+        src="{{user.pic}}"
+        alt="user profile image"
+        width="100px"
+        height="100px"
+        referrerpolicy="no-referrer"
+      />
+      <div class="profile-username">{{user.username}}</div>
+    </div>
+    <div>
+      <div>{{user.bio}}</div>
+      {%if friends == True%}
+      <button class="friends-tag">Friends</button>
+      {%else%}
+      <a href="{{url_for('add_friend', user_name = user.username)}}">
+        <button class="edit-profile-btn">Add Friend</button>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div id="listings">
+  {% if docs|length ==0%}
+  <div>Nothing to see...</div>
+  {% else %} {% for doc in docs %} {% if doc.public == True %}
+  <div class="listing-alt" onclick="window.location.href='/item/{{ doc._id }}'">
+    <div class="listing-context-alt">
+      <div class="listing-alt-image">
+        <img
+          src="{{ doc.image_url }}"
+          alt="{{ doc.title }}"
+          referrerpolicy="no-referrer"
+        />
+      </div>
+      <div class="details-alt">
+        <div class="details-primary">
+          <b>{{ doc.name }}</b>
+          <p>${{ doc.price }}</p>
+        </div>
+        <p>{{ doc.description }}</p>
+      </div>
+    </div>
+  </div>
+  {% endif %} {% endfor %} {% endif %}
+</div>
+{% endblock %}

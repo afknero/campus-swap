@@ -1,0 +1,48 @@
+{% extends 'base.html' %} 
+
+{% block container %}
+<form method="POST" action="{{url_for('create_item', user_id = userid)}}" id="add-edit">
+  <div id="add-edit-header">Make a Listing</div>
+  <div class="step">
+    <div class="instruction">
+      <div class="instruction-step">1</div>
+      <div class="instruction-details">ADD PRODUCT TITLE</div>
+    </div>
+    <input type="text" id="itemname" name="itemname" placeholder="Item name" />
+  </div>
+  <div class="step">
+    <div class="instruction">
+      <div class="instruction-step">2</div>
+      <div class="instruction-details">ADD PRODUCT DESCRIPTION</div>
+    </div>
+    <textarea
+      type="text"
+      id="description"
+      name="description"
+      placeholder="Description"
+    ></textarea>
+  </div>
+  <div class="step">
+    <div class="instruction">
+      <div class="instruction-step">3</div>
+      <div class="instruction-details">ADD PRODUCT PRICE</div>
+    </div>
+    <input
+      type="number"
+      step="0.01"
+      id="price"
+      name="price"
+      placeholder="10.00"
+    />
+  </div>
+  <div class="step">
+    <div class="instruction">
+      <div class="instruction-step">4</div>
+      <div class="instruction-details">ADD PRODUCT IMAGE URL</div>
+    </div>
+    <input type="test" id="url" name="url" placeholder="Image URL" />
+  </div>
+  <input type="submit" value="Save" />
+</form>
+
+{% endblock %}

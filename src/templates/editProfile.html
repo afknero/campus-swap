@@ -1,0 +1,33 @@
+{% extends 'base.html' %} 
+
+{% block container %}
+<form method="POST" action="{{url_for('edit_profile')}}" id="add-edit">
+  <div id="add-edit-header">Edit Profile</div>
+  <div class="step">
+    <div class="instruction">
+      <div class="instruction-step">1</div>
+      <div class="instruction-details">Add a Bio</div>
+    </div>
+    <textarea 
+      type="text" 
+      id="bio" 
+      name="bio">{{user.bio}}
+    </textarea>
+  </div>
+  <div class="step">
+    <div class="instruction">
+      <div class="instruction-step">2</div>
+      <div class="instruction-details">Add a Profile Picture </div>
+    </div>
+    <div class ="edit-profile-pic"><img
+    src="{{user.pic}}"
+    alt="user profile image"
+    width="80px"
+    height="80px"
+    referrerpolicy="no-referrer"
+  /></div>
+    <input type="test" id="pic" name="pic" value="{{user.pic}}" />
+  </div>
+  <input type="submit" value="Save" />
+</form>
+{% endblock %}

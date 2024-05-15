@@ -1,0 +1,24 @@
+{% extends 'base.html' %} {% block container %}
+<div class="item">
+  <div class="item-image">
+    <img
+      src="{{ founditem.image_url }}"
+      alt="{{ founditem.name }}"
+      referrerpolicy="no-referrer"
+    />
+  </div>
+  <div id="item-content">
+    <div id="item-primary">
+      <p>{{ founditem.name }}</p>
+      <p>${{ founditem.price }}</p>
+    </div>
+    <div id="item-details">
+      <p><strong>Description: </strong>{{ founditem.description }}</p>
+      <p>Sold By: <a href="{{url_for('view_user', user_name = founditem.username)}}">{{ founditem.username }}</a></p>
+      {%if user.username != founditem.username%}
+      <a href="{{url_for('offer', item_id = founditem._id)}}">Make Offer</a>
+      {%endif%}
+    </div>
+  </div>
+</div>
+{%endblock%}

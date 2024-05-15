@@ -1,0 +1,95 @@
+{% extends 'base.html' %} {% block container %}
+
+<div id="profile">
+  <div id="profile-header">
+    <img
+      src="{{ url_for('static', filename='user.png') }}"
+      alt="user profile image"
+      width="80px"
+      height="80px"
+    />
+  </div>
+
+  <div id="listings">
+    {% if docs|length == 0 %}
+    <div id="new-listing" onclick="window.location.href='/add'">
+      <img
+        src="https://cdn-icons-png.freepik.com/512/8333/8333955.png"
+        alt="Add Item"
+        width="30px"
+        height="30px"
+      />
+      <input type="submit" value="NEW LISTING" />
+    </div>
+    {% else %}
+    <div id="new-listing" onclick="window.location.href='/add'">
+      <img
+        src="https://cdn-icons-png.freepik.com/512/8333/8333955.png"
+        alt="Add Item"
+        width="30px"
+        height="30px"
+      />
+      <input type="submit" value="NEW LISTING" />
+    </div>
+    {% for doc in docs %} {% if doc.public == True %}
+    <div
+      class="listing-alt"
+      onclick="window.location.href='/item/{{ doc._id }}'"
+    >
+      <div class="listing-context-alt">
+        <div class="listing-image-alt">
+          <img
+            src="{{ doc.image_url }}"
+            alt="{{ doc.title }}"
+            referrerpolicy="no-referrer"
+          />
+        </div>
+        <div class="details-alt">
+          <div class="details-primary">
+            <b>{{ doc.name }}</b>
+            <p>${{ doc.price }}</p>
+          </div>
+          <p>{{ doc.description }}</p>
+        </div>
+      </div>
+      <div class="item-buttons">
+        <a href="{{url_for('edit', item_id = doc._id)}}">Edit</a>
+        <br />
+        <a href="{{url_for('delete', item_id = doc._id)}}">Delete</a>
+        <br />
+        <a href="{{url_for('setprivate', item_id = doc._id)}}">Set Private</a>
+      </div>
+    </div>
+    {% else %}
+    <div
+      class="listing-alt"
+      onclick="window.location.href='/item/{{ doc._id }}'"
+    >
+      <div class="listing-context-alt">
+        <div class="listing-image-alt">
+          <img
+            src="{{ doc.image_url }}"
+            alt="{{ doc.title }}"
+            referrerpolicy="no-referrer"
+          />
+        </div>
+        <div class="details-alt">
+          <div class="details-primary">
+            <b>{{ doc.name }}</b>
+            <p>${{ doc.price }}</p>
+          </div>
+          <p>{{ doc.description }}</p>
+        </div>
+      </div>
+      <div class="item-buttons">
+        <a href="{{url_for('edit', item_id = doc._id)}}">Edit</a>
+        <br />
+        <a href="{{url_for('delete', item_id = doc._id)}}">Delete</a>
+        <br />
+        <a href="{{url_for('setpublic', item_id = doc._id)}}">Set Public</a>
+      </div>
+    </div>
+    {% endif %} {% endfor %} {% endif %}
+  </div>
+</div>
+{% endblock %}
