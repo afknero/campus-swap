@@ -3,173 +3,195 @@
 import os
 import datetime
 from flask import Flask, render_template, request, redirect, url_for
-
-# from markupsafe import escape
 import pymongo
 from dotenv import load_dotenv
-import flask_login  # this will be used for user authentication
 from flask_bcrypt import Bcrypt
-from flask_login import LoginManager
+import flask_login
 from bson.decimal128 import Decimal128
-from bson.objectid import ObjectId  # used to search db using objec ids
+from bson.objectid import ObjectId
 
 # load credentials and configuration options from .env file
-# if you do not yet have a file named .env, make one based on the template in env.example
-load_dotenv()  # take environment variables from .env.
+load_dotenv()
 
 # instantiate the app
 app = Flask(__name__, template_folder="templates")
 app.secret_key = os.getenv("SECRET_KEY")
 
 bcrypt = Bcrypt(app)
-# these 2 are for flask login
-login_manager = LoginManager()
+
+login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 
-# if using Atlas database uncomment next line!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! and comment out the next four lines
 client = pymongo.MongoClient(os.getenv("MONGO_URI"))
- 
-#if using containerized instance of mongo uncomment next 4 lines else comment them out
+
 # root_username = os.environ["MONGO_INITDB_ROOT_USERNAME"]  #1
 # root_password = os.environ["MONGO_INITDB_ROOT_PASSWORD"]  #2
 # uri = f"mongodb://{root_username}:{root_password}@mongodb:27017/db?authSource=admin" #3
 # client = pymongo.MongoClient(uri) #4
 
-db = client['Cluster0']  # store a reference to the database
-
-# the following try/except block is a way to verify that the database connection is alive (or not)
-try:
-    # verify the connection works by pinging the database
-    client.admin.command("ping")  # The ping command is cheap and does not require auth.
-    print(" *", "Connected to MongoDB!")  # if we get here, the connection worked!
-except Exception as e:
-    # the ping command failed, so the connection is not available.
-    print(" * MongoDB connection error:", e)  # debug
-
-# set up the routes
+db = client["Cluster0"]  # store a reference of the database
 
 
-# # turn on debugging if in development mode
-# if os.getenv("FLASK_ENV", "development") == "development":
-#     # turn on debugging, if in development
-#     app.debug = True  # debug mnode
-
-
-# this is the class user which will be stored in a session
-# i think the flask_login.Usermixin handles all of the methods needed
 class User(flask_login.UserMixin):
-    pass
+    """
+    User class that represents a user object.
+    """
+
+    def __init__(self, user_id, username):
+        """
+        Initializes a User object.
+        """
+        self.id = user_id
+        self.username = username
+
+    @property
+    def is_authenticated(self):
+        """
+        Returns True if the user is authenticated (i.e. they have provided valid credentials).
+        """
+        return True
+
+    @property
+    def is_anonymous(self):
+        """
+        Returns False if this user is not anonymous.
+        """
+        return False
+
+    def get_id(self):
+        """
+        Returns a string that uniquely identifies the user.
+        """
+        return str(self.id)
 
 
-# this callback is used to reload the user object from the user ID stored in the session.It should take the str ID of a user, and return the corresponding user object
 @login_manager.user_loader
-def user_loader(username):
-    founduser = db.users.find_one({"username": username})
-    if not founduser:
-        return
+def user_loader(user_id):
+    """
+    Callback to reload the user object from the user ID stored in the session.
+    """
+    found_user = db.users.find_one({"_id": ObjectId(user_id)})
+    if not found_user:
+        return None
 
-    user = User()
-    user.id = founduser["_id"]
+    user = User(user_id=found_user["_id"], username=found_user["username"])
     return user
 
 
 @login_manager.request_loader
 def request_loader(request):
+    """
+    Callback to load a user from a request.
+    """
     username = request.form.get("username")
-    founduser = db.users.find_one({"username": username})
-    if not founduser:
-        return
+    if not username:
+        return None
 
-    user = User()
-    user.id = username
+    found_user = db.users.find_one({"username": username})
+    if not found_user:
+        return None
+
+    user = User(user_id=found_user["_id"], username=found_user["username"])
     return user
 
 
-@app.route("/")
-def home():
+@login_manager.unauthorized_handler
+def unauthorized_handler():
     """
-    Route for the home page
+    Redirects unauthorized users to the login page.
     """
-    sort_option = request.args.get("sort")
-
-    if sort_option == "oldest":
-        docs_cursor = db.items.find({"public": True}).sort("created_at", 1)
-    elif sort_option == "lowest":
-        docs_cursor = db.items.find({"public": True}).sort("price", 1)
-    elif sort_option == "highest":
-        docs_cursor = db.items.find({"public": True}).sort("price", -1)
-    else:
-        docs_cursor = db.items.find({"public": True}).sort("created_at", -1)
-
-    docs = list(docs_cursor)
-    return render_template("index.html", docs=docs)  # render the hone template
+    return redirect(url_for("login"))
 
 
-# route to accept the form submission to delete an existing post
-@app.route("/signup", methods=["POST", "GET"])
-def sign_up():
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
     """
-    Route for GET AND POST for signup page
+    GET and POST routes for signup page.
     """
     if request.method == "POST":
         username = request.form["fusername"]
         password = request.form["fpassword"]
+
         user = db.users.find_one({"username": username})
         if user:
-            return render_template("signup.html", error="Username already in use.")
-        else:
-            hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
-            new_user = {
-                "username": username,
-                "password": hashed_password,
-                "items": [],
-                "bio": "",
-                "pic": "https://i.imgur.com/xCvzudW.png",
-                "friends": [],
-            }
-            db.users.insert_one(new_user)
-            return redirect(url_for("log_in"))
+            return render_template("signup.html", error="Username unavailable.")
+
+        hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
+        new_user = {
+            "username": username,
+            "password": hashed_password,
+            "bio": "",
+            "pic": "https://i.imgur.com/xCvzudW.png",
+            "items": [],
+            "friends": [],
+        }
+        result = db.users.insert_one(new_user)
+
+        user = User(user_id=result.inserted_id, username=username)
+        flask_login.login_user(user)
+
+        return redirect(url_for("home"))
+
     if flask_login.current_user.is_authenticated:
         return redirect(url_for("home"))
     return render_template("signup.html")
 
 
-@app.route("/login", methods=["POST", "GET"])
-def log_in():
+@app.route("/login", methods=["GET", "POST"])
+def login():
     """
-    Route for GET AND POST for login page
+    GET and POST routes for login page.
     """
     if request.method == "POST":
         username = request.form["fusername"]
         password = request.form["fpassword"]
+
         found_user = db.users.find_one({"username": username})
         if not found_user:
             return render_template("login.html", error="User not found.")
-        else:
-            is_valid = bcrypt.check_password_hash(found_user["password"], password)
-            if not is_valid:
-                return render_template(
-                    "login.html", error="Username or password is invalid."
-                )
-            user = User()
-            user.id = username
-            flask_login.login_user(user)
-            return redirect(url_for("home"))
+
+        is_valid = bcrypt.check_password_hash(found_user["password"], password)
+        if not is_valid:
+            return render_template(
+                "login.html", error="Username or password is invalid."
+            )
+
+        user = User(user_id=found_user["_id"], username=found_user["username"])
+        flask_login.login_user(user)
+        return redirect(url_for("home"))
+
     if flask_login.current_user.is_authenticated:
         return redirect(url_for("home"))
     return render_template("login.html")
 
 
-@app.route("/protected")
-@flask_login.login_required
-def protected():
-    return render_template("protected.html")
-
-
 @app.route("/logout")
 def logout():
+    """
+    Logs out the current user.
+    """
     flask_login.logout_user()
-    return redirect(url_for("log_in"))
+    return redirect(url_for("login"))
+
+
+@app.route("/")
+def home():
+    """
+    Route for the home page.
+    """
+    sort_option = request.args.get("sort")
+
+    if sort_option == "lowest":
+        docs_cursor = db.items.find({"public": True}).sort("price", 1)
+    elif sort_option == "highest":
+        docs_cursor = db.items.find({"public": True}).sort("price", -1)
+    elif sort_option == "oldest":
+        docs_cursor = db.items.find({"public": True}).sort("created_at", 1)
+    else:
+        docs_cursor = db.items.find({"public": True}).sort("created_at", -1)
+
+    docs = list(docs_cursor)
+    return render_template("index.html", docs=docs)
 
 
 @app.route("/item/<item_id>")
@@ -182,7 +204,7 @@ def item(item_id):
         return render_template("item.html", founditem=founditem, user=user)
     except Exception as e:
         print(e)
-        return redirect(url_for("home"))  # redirect to an error page ideally
+        return redirect(url_for("home"))
 
 
 # add item here
@@ -502,15 +524,14 @@ def friends():
     return render_template("friends.html", friends=friends)
 
 
-@login_manager.unauthorized_handler
-def unauthorized_handler():
-    return redirect(url_for("log_in"))
-
-# run the app
 if __name__ == "__main__":
-    # use the PORT environment variable, or default to 5000
-    FLASK_PORT = os.getenv("FLASK_PORT", "5001")
+    # Verify the connection works by pinging the database.
+    try:
+        client.admin.command("ping")
+        print(" * Connected to MongoDB!")
+    except pymongo.errors.PyMongoError as error:
+        print(" * MongoDB connection error:", error)
 
-    # import logging
-    # logging.basicConfig(filename='/home/ak8257/error.log',level=logging.DEBUG)
-    app.run(host="0.0.0.0", port=FLASK_PORT)
+    FLASK_PORT = os.getenv("FLASK_PORT", "5000")
+    # app.run(host="0.0.0.0", port=FLASK_PORT)
+    app.run(port=FLASK_PORT)
