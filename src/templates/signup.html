@@ -1,10 +1,10 @@
 {% extends 'base.html' %} {% block container %}
 <div id="login-signup">
-  <a href="{{ url_for('log_in') }}">Log In</a>
-  <a href="{{ url_for('sign_up') }}" class="active">Sign Up</a>
+  <a href="{{ url_for('login') }}">Log In</a>
+  <a href="{{ url_for('signup') }}" class="active">Sign Up</a>
 </div>
 
-<form method="POST" action="{{ url_for('sign_up')}}" id="login-signup-form">
+<form method="POST" action="{{ url_for('signup')}}" id="login-signup-form">
   <div>
     <label for="fusername">Username</label><br />
     <input
