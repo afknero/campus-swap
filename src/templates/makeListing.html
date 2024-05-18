@@ -1,7 +1,5 @@
-{% extends 'base.html' %} 
-
-{% block container %}
-<form method="POST" action="{{url_for('create_item', user_id = userid)}}" id="add-edit">
+{% extends 'base.html' %} {% block container %}
+<form method="POST" action="{{ url_for('create_item') }}" id="add-edit">
   <div id="add-edit-header">Make a Listing</div>
   <div class="step">
     <div class="instruction">
@@ -44,5 +42,4 @@
   </div>
   <input type="submit" value="Save" />
 </form>
-
 {% endblock %}

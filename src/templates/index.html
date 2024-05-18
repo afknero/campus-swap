@@ -1,6 +1,6 @@
 {% extends 'base.html' %} {% block container %}
 <div id="search-results">
-  <div id="results">{{ docs|length }} Results</div>
+  <div id="results">{{ items|length }} Results</div>
   <select name="sort" id="sort" onchange="dropdownRedirect()">
     <option value="newest">Newest</option>
     <option value="oldest">Oldest</option>
@@ -10,21 +10,21 @@
 </div>
 
 <div id="listings">
-  {% for doc in docs %}
-    <div class="listing" onclick="window.location.href='/item/{{ doc._id }}'">
+  {% for item in items %}
+    <div class="listing" onclick="window.location.href='/item/{{item._id}}'">
       <div class="listing-image">
         <img
-          src="{{ doc.image_url }}"
-          alt="{{ doc.title }}"
+          src="{{item.image_url}}"
+          alt="{{item.title}}"
           referrerpolicy="no-referrer"
         />
       </div>
       <div class="details">
         <div class="details-primary">
-          <p>{{ doc.name }}</p>
-          <p>${{ doc.price }}</p>
+          <p>{{item.name}}</p>
+          <p>${{item.price}}</p>
         </div>
-        <p>{{ doc.description }}</p>
+        <p>{{item.description}}</p>
       </div>
     </div>
   </if>
@@ -32,17 +32,11 @@
 </div>
 
 <script>
-  // retrieve the sorting dropdown
   const dropdown = document.getElementById("sort");
 
-  /**
-   * Automatically sets the selected sorting option in the dropdown based on the URL parameter.
-   */
   (() => {
-    // parse the URL parameter
     const searchParams = new URLSearchParams(window.location.search);
     const sortValue = searchParams.get("sort");
-    // set the selected sorting option in the dropdown, if valid
     if (
       sortValue &&
       Array.from(dropdown.options).some((option) => option.value === sortValue)
@@ -51,9 +45,6 @@
     }
   })();
 
-  /**
-   * Redirects the user to the homepage with a specified sorting option.
-   */
   function dropdownRedirect() {
     window.location.href = "/?sort=" + dropdown.value;
   }

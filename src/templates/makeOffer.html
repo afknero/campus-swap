@@ -2,19 +2,19 @@
 <div class="item-alt">
   <div class="item-image">
     <img
-      src="{{ founditem.image_url }}"
-      alt="{{ founditem.name }}"
+      src="{{item.image_url}}"
+      alt="{{item.name}}"
       referrerpolicy="no-referrer"
     />
   </div>
   <div id="item-content">
     <div id="item-primary">
-      <p>Trading for: {{ founditem.name }}</p>
-      <p>Value : ${{ founditem.price }}</p>
+      <p>Trading for: {{item.name}}</p>
+      <p>Value: ${{item.price}}</p>
     </div>
     <div id="item-details">
-      <p><strong>Description: </strong>{{ founditem.description }}</p>
-      <p>Sold By: {{ founditem.username }}</p>
+      <p><b>Description: </b>{{item.description}}</p>
+      <p>Sold By: {{item.username}}</p>
     </div>
   </div>
 </div>
@@ -23,11 +23,11 @@
   <div class="offer-header">Your Items</div>
   <form
     method="POST"
-    action="{{url_for('new_offer', item_id = founditem._id)}}"
+    action="{{ url_for('new_offer', item_id=item._id) }}"
     id="offer-form"
   >
     <div id="listings">
-      {% if docs|length == 0 %}
+      {% if items|length == 0 %}
       <div id="new-listing" onclick="window.location.href='/add'">
         <img
           src="https://cdn-icons-png.freepik.com/512/8333/8333955.png"
@@ -37,23 +37,23 @@
         />
         <input type="submit" value="NEW LISTING" />
       </div>
-      {%endif%} {% for doc in docs %}
+      {%endif%} {% for item in items %}
       <div class="listing-alt">
         <div class="listing-context-alt">
           <div class="listing-image-alt">
             <img
-              src="{{ doc.image_url }}"
-              alt="{{ doc.title }}"
+              src="{{item.image_url}}"
+              alt="{{item.title}}"
               referrerpolicy="no-referrer"
             />
           </div>
           <div class="offer-details">
             <div>
-              <p>{{ doc.name }}</p>
-              <p>${{ doc.price }}</p>
+              <p>{{item.name}}</p>
+              <p>${{item.price}}</p>
             </div>
             <div>
-              <input type="checkbox" value="{{doc._id}}" name="mycheckbox" />
+              <input type="checkbox" value="{{item._id}}" name="mycheckbox" />
             </div>
           </div>
         </div>

@@ -54,8 +54,8 @@
           {% for item in offer.offereditems %}
           <div class="offer-image-alt">
             <img
-              src="{{ item.image_url }}"
-              alt="{{ item.name }}"
+              src="{{item.image_url}}"
+              alt="{{item.name}}"
               referrerpolicy="no-referrer"
             />
           </div>
@@ -81,9 +81,9 @@
     </div>
 
     <div class="item-buttons-alt">
-      <a href="{{url_for('deleteoffer', offer_id = offer._id)}}">Edit Offer</a>
+      <a href="{{ url_for('delete_offer', offer_id=offer._id) }}">Edit Offer</a>
       <br />
-      <a href="{{url_for('deleteoffer', offer_id = offer._id)}}"
+      <a href="{{ url_for('delete_offer', offer_id=offer._id) }}"
         >Delete Offer</a
       >
     </div>

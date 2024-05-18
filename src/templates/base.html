@@ -20,35 +20,17 @@
       <header>
         <nav role="navigation">
           <div id="menuToggle">
-            <!--
-            A fake / hidden checkbox is used as click reciever,
-            so you can use the :checked selector on it.
-            -->
             <input type="checkbox" />
-
-            <!--
-            Some spans to act as a hamburger.
-            
-            They are acting like a real hamburger,
-            not that McDonalds stuff.
-            -->
             <span></span>
             <span></span>
             <span></span>
-
-            <!--
-            Too bad the menu has to be inside of the button
-            but hey, it's pure CSS magic.
-            -->
             <ul id="menu">
               <a href="{{ url_for('home')}}"><li>Home</li></a>
               {% if current_user.is_authenticated %}
-              <a href ="{{url_for('profile')}}"><li>View Profile</li></a>
-              <a href ="{{url_for('friends')}}"><li>Friends</li></a>
-              <a href="{{ url_for('add')}}"><li>Make Listing</li></a>
-              <a href="{{ url_for('view_listings')}}"><li>View Listings</li></a>
-              <a href="{{ url_for('sentoffers')}}"><li>Sent Offers</li></a>
-              <a href="{{ url_for('recievedoffers')}}"><li>Recieved Offers</li></a>
+              <a href="{{ url_for('view_profile') }}"><li>View Profile</li></a>
+              <a href="{{ url_for('create_item') }}"><li>Make Listing</li></a>
+              <a href="{{ url_for('offers_sent') }}"><li>Sent Offers</li></a>
+              <a href="{{ url_for('offers_received') }}"><li>Recieved Offers</li></a>
               <a href="{{ url_for('logout') }}"><li>Logout</li></a>
               {% else%}
               <a href="{{ url_for('login') }}"><li>Login</li></a>
@@ -63,7 +45,7 @@
       <main>{% block container %} {% endblock %}</main>
       <footer>
         <p>
-          &copy; 2022. Shared under the GPL3 license. Source code available at
+          &copy; 2024. Shared under the GPL3 license. Source code available at
           <a
             href="https://github.com/nyu-software-engineering/flask-pymongo-web-app-example"
             >available on Github</a
