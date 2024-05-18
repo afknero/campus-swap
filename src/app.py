@@ -1,7 +1,11 @@
+"""
+This module defines a Flask application with routes and functionalities for managing user profiles, items, offers, and friends.
+"""
+
 #!/usr/bin/env python3
 
 import os
-import datetime
+from datetime import datetime, UTC
 from flask import Flask, render_template, request, redirect, url_for
 import pymongo
 from dotenv import load_dotenv
@@ -79,11 +83,11 @@ def user_loader(user_id):
 
 
 @login_manager.request_loader
-def request_loader(request):
+def request_loader(req):
     """
     Callback to load a user from a request.
     """
-    username = request.form.get("username")
+    username = req.form.get("username")
     if not username:
         return None
 
@@ -114,7 +118,7 @@ def signup():
 
         user = db.users.find_one({"username": username})
         if user:
-            return render_template("signup.html", error="Username unavailable.")
+            return render_template("signup.html", error="Username Unavailable.")
 
         hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
         new_user = {
@@ -123,7 +127,8 @@ def signup():
             "bio": "",
             "pic": "https://i.imgur.com/xCvzudW.png",
             "items": [],
-            "friends": [],
+            "following": [],
+            "followers": [],
         }
         result = db.users.insert_one(new_user)
 
@@ -148,13 +153,11 @@ def login():
 
         found_user = db.users.find_one({"username": username})
         if not found_user:
-            return render_template("login.html", error="User not found.")
+            return render_template("login.html", error="User Not Found.")
 
         is_valid = bcrypt.check_password_hash(found_user["password"], password)
         if not is_valid:
-            return render_template(
-                "login.html", error="Username or password is invalid."
-            )
+            return render_template("login.html", error="Incorrect Password.")
 
         user = User(user_id=found_user["_id"], username=found_user["username"])
         flask_login.login_user(user)
@@ -190,155 +193,192 @@ def home():
     else:
         docs_cursor = db.items.find({"public": True}).sort("created_at", -1)
 
-    docs = list(docs_cursor)
-    return render_template("index.html", docs=docs)
+    items = list(docs_cursor)
+    return render_template("index.html", items=items)
+
+
+@app.route("/add", methods=["GET", "POST"])
+@flask_login.login_required
+def create_item():
+    """
+    Route to handle the creation of a new listing.
+    """
+    if request.method == "POST":
+        user_id = flask_login.current_user.get_id()
+        user = db.users.find_one({"_id": ObjectId(user_id)})
+
+        username = user["username"]
+        name = request.form["itemname"]
+        desc = request.form["description"]
+        price = Decimal128(request.form["price"])
+        url = request.form["url"]
+        item = {
+            "user_id": ObjectId(user_id),
+            "username": username,
+            "name": name,
+            "description": desc,
+            "image_url": url,
+            "price": price,
+            "public": True,
+            "created_at": datetime.now(UTC),
+        }
+        db.items.insert_one(item)
+        return redirect(url_for("view_profile"))
+
+    return render_template("makeListing.html")
 
 
 @app.route("/item/<item_id>")
 @flask_login.login_required
-def item(item_id):
+def view_item(item_id):
+    """
+    View details of a specific item.
+    """
     try:
-        founditem = db.items.find_one({"_id": ObjectId(item_id)})
-        userid = flask_login.current_user.id
-        user = db.users.find_one({"_id": ObjectId(userid)})
-        return render_template("item.html", founditem=founditem, user=user)
-    except Exception as e:
-        print(e)
+        found_item = db.items.find_one({"_id": ObjectId(item_id)})
+        if not found_item:
+            return redirect(url_for("home"))
+
+        return render_template("viewListing.html", item=found_item)
+    except pymongo.errors.PyMongoError as e:
+        print("MongoDB error:", e)
         return redirect(url_for("home"))
 
 
-# add item here
-@app.route("/add")
+@app.route("/edit/<item_id>", methods=["GET", "POST"])
 @flask_login.login_required
-def add():
-    # TODO make this an actual userid fetch
-    try:
-        userid = flask_login.current_user.id
-        return render_template("add.html", userid=userid)
-    except:
-        # error handle
-        return redirect(url_for("home"))
+def edit_item(item_id):
+    """
+    Edit details of a specific item.
+    """
+    if request.method == "POST":
+        try:
+            name = request.form["name"]
+            desc = request.form["desc"]
+            price = Decimal128(request.form["price"])
+            url = request.form["url"]
+
+            item = {"name": name, "description": desc, "image_url": url, "price": price}
+            db.items.update_one({"_id": ObjectId(item_id)}, {"$set": item})
+
+            return redirect(url_for("view_profile"))
+        except pymongo.errors.PyMongoError as e:
+            print("MongoDB error:", e)
+            return redirect(url_for("edit_item", item_id=item_id))
+
+    found_item = db.items.find_one({"_id": ObjectId(item_id)})
+    if not found_item:
+        return redirect(url_for("view_profile"))
+
+    return render_template("editListing.html", item=found_item)
 
 
-@app.route("/add/<user_id>", methods=["GET", "POST"])
-@flask_login.login_required
-def create_item(user_id):
-    user = db.users.find_one({"_id": ObjectId(user_id)})
-    print(user)
-    username = user["username"]
-    name = request.form["itemname"]
-    desc = request.form["description"]
-    price = Decimal128(request.form["price"])
-    url = request.form["url"]
-    item = {
-        "name": name,
-        "description": desc,
-        "user": ObjectId(user_id),
-        "username": username,
-        "image_url": url,
-        "price": price,
-        "created_at": datetime.datetime.utcnow(),
-        "public": True,
-    }
-    db.items.insert_one(item)
-    return redirect(url_for("view_listings"))
-
-
-# delete has no html but should be invoked later from the my listings page, pass the item id through
 @app.route("/delete/<item_id>")
 @flask_login.login_required
-def delete(item_id):
+def delete_item(item_id):
+    """
+    Delete a specific item.
+    """
+    # delete the specified item
     db.items.delete_one({"_id": ObjectId(item_id)})
-    # TODO can redirect to the my listings page later
-    return redirect(url_for("purge", item_id=item_id))
+
+    # purge related offers
+    db.offers.delete_many({"offereditems": item_id})
+    db.offers.delete_many({"offerforid": item_id})
+
+    return redirect(url_for("view_profile"))
 
 
-@app.route("/deleteoffer/<offer_id>")
+@app.route("/set-public/<item_id>")
 @flask_login.login_required
-def deleteoffer(offer_id):
+def set_public(item_id):
+    """
+    Set the visibility of an item to public.
+    """
+    db.items.update_one({"_id": ObjectId(item_id)}, {"$set": {"public": True}})
+    return redirect(url_for("view_profile"))
+
+
+@app.route("/set-private/<item_id>")
+@flask_login.login_required
+def set_private(item_id):
+    """
+    Set the visibility of an item to private.
+    """
+    db.items.update_one({"_id": ObjectId(item_id)}, {"$set": {"public": False}})
+    return redirect(url_for("view_profile"))
+
+
+@app.route("/offer/<item_id>", methods=["GET", "POST"])
+@flask_login.login_required
+def make_offer(item_id):
+    """
+    Display the offer page for a specific item and handle creating a trade offer.
+    """
+    if request.method == "POST":
+        offered = request.form.getlist("mycheckbox")
+        receiver = db.items.find_one({"_id": ObjectId(item_id)}).get("user")
+        sender = flask_login.current_user.get_id()
+
+        offer = {
+            "desired": item_id,
+            "offered": offered,
+            "sender": ObjectId(sender),
+            "receiver": receiver,
+            "status": "sent",
+            "created_at": datetime.now(UTC),
+        }
+        db.offers.insert_one(offer)
+        return redirect(url_for("offers_sent"))
+
+    found_item = db.items.find_one({"_id": ObjectId(item_id)})
+    if not found_item:
+        return redirect(url_for("home"))
+
+    user_id = flask_login.current_user.get_id()
+    user_items = list(db.items.find({"user": ObjectId(user_id)}))
+
+    return render_template("makeOffer.html", item=found_item, item=user_items)
+
+
+@app.route("/delete-offer/<offer_id>")
+@flask_login.login_required
+def delete_offer(offer_id):
+    """
+    Delete a specific offer.
+    """
     db.offers.delete_one({"_id": ObjectId(offer_id)})
-    return redirect(url_for("sentoffers"))
+    return redirect(url_for("offers_sent"))
 
 
-@app.route("/edit/<item_id>")
+@app.route("/accept-offer/<offer_id>")
 @flask_login.login_required
-def edit(item_id):
-    founditem = db.items.find_one({"_id": ObjectId(item_id)})
-    return render_template("edit.html", founditem=founditem, item_id=item_id)
+def accept_offer(offer_id):
+    """
+    Accept an offer by updating its status to "accepted".
+    """
+    db.offers.update_one({"_id": ObjectId(offer_id)}, {"$set": {"status": "accepted"}})
+    return redirect(url_for("offers_received"))
 
 
-@app.route("/update/<item_id>", methods=["GET", "POST"])
+@app.route("/reject-offer/<offer_id>")
 @flask_login.login_required
-def update_item(item_id):
-    name = request.form["itemname"]
-    desc = request.form["description"]
-    price = Decimal128(request.form["price"])
-    url = request.form["url"]
-    item = {"name": name, "description": desc, "image_url": url, "price": price}
-    db.items.update_one({"_id": ObjectId(item_id)}, {"$set": item})
-    return redirect(url_for("view_listings"))
+def reject_offer(offer_id):
+    """
+    Accept an offer by updating its status to "accepted".
+    """
+    db.offers.update_one({"_id": ObjectId(offer_id)}, {"$set": {"status": "rejected"}})
+    return redirect(url_for("offers_received"))
 
 
-@app.route("/viewListings")
+@app.route("/offers-sent")
 @flask_login.login_required
-def view_listings():
-    user_to_find = flask_login.current_user.id
-    print(user_to_find)
-    items = list(db.items.find({"user": ObjectId(user_to_find)}))
-    return render_template("viewlisting.html", docs=items)
-
-
-@app.route("/setpublic/<item_id>")
-@flask_login.login_required
-def setpublic(item_id):
-    item = {"public": True}
-    db.items.update_one({"_id": ObjectId(item_id)}, {"$set": item})
-    return redirect(url_for("view_listings"))
-
-
-@app.route("/setprivate/<item_id>")
-@flask_login.login_required
-def setprivate(item_id):
-    item = {"public": False}
-    db.items.update_one({"_id": ObjectId(item_id)}, {"$set": item})
-    return redirect(url_for("view_listings"))
-
-
-@app.route("/offer/<item_id>")
-@flask_login.login_required
-def offer(item_id):
-    founditem = db.items.find_one({"_id": ObjectId(item_id)})
-    user_to_find = flask_login.current_user.id
-    items = list(db.items.find({"user": ObjectId(user_to_find)}))
-    return render_template(
-        "offer.html", founditem=founditem, item_id=item_id, docs=items
-    )
-
-
-@app.route("/newoffer/<item_id>", methods=["GET", "POST"])
-@flask_login.login_required
-def new_offer(item_id):
-    offered = request.form.getlist("mycheckbox")
-    touser = db.items.find_one({"_id": ObjectId(item_id)}).get("user")
-
-    curuser = flask_login.current_user.id
-    offer = {
-        "offerforid": item_id,
-        "offereditems": offered,
-        "sentby": ObjectId(curuser),
-        "status": "sent",
-        "sendtouser": touser,
-    }
-    db.offers.insert_one(offer)
-    return redirect(url_for("sentoffers"))
-
-
-@app.route("/sentoffers")
-@flask_login.login_required
-def sentoffers():
-    """ """
+def offers_sent():
+    """
+    Retrieve and display the trade offers sent by the current user.
+    """
     # find the current user's offers
-    user = flask_login.current_user.id
+    user = flask_login.current_user.get_id()
     offers = list(db.offers.find({"sentby": ObjectId(user)}))
 
     # create a set of all item IDs
@@ -366,14 +406,17 @@ def sentoffers():
         offer["offereditems"] = [items.get(str(item_id)) for item_id in offereditems]
         print(offer)
 
-    return render_template("sentoffers.html", offers=offers)
+    return render_template("sentOffers.html", offers=offers)
 
 
-@app.route("/recievedoffers")
+@app.route("/offers-received")
 @flask_login.login_required
-def recievedoffers():
+def offers_received():
+    """
+    Retrieve and display the trade offers sent to the current user.
+    """
     # find the current user's offers
-    user = flask_login.current_user.id
+    user = flask_login.current_user.get_id()
     offers = list(db.offers.find({"sendtouser": ObjectId(user)}))
 
     # create a set of all item IDs
@@ -401,65 +444,89 @@ def recievedoffers():
         offer["offereditems"] = [items.get(str(item_id)) for item_id in offereditems]
         print(offer)
 
-    return render_template("recievedoffers.html", offers=offers)
-
-
-@app.route("/acceptoffer/<offer_id>")
-@flask_login.login_required
-def acceptoffer(offer_id):
-    item = {"status": "accepted"}
-    db.offers.update_one({"_id": ObjectId(offer_id)}, {"$set": item})
-    return redirect(url_for("recievedoffers"))
-
-
-@app.route("/rejectoffer/<offer_id>")
-@flask_login.login_required
-def rejectoffer(offer_id):
-    item = {"status": "rejected"}
-    db.offers.update_one({"_id": ObjectId(offer_id)}, {"$set": item})
-    return redirect(url_for("recievedoffers"))
-
-
-@app.route("/purge/<item_id>")
-@flask_login.login_required
-def purge(item_id):
-    query = {"offereditems": item_id}
-    db.offers.delete_many(query)
-    query2 = {"offerforid": item_id}
-    db.offers.delete_many(query2)
-    return redirect(url_for("view_listings"))
+    return render_template("recievedOffers.html", offers=offers)
 
 
 @app.route("/profile")
 @flask_login.login_required
-def profile():
+def view_profile():
+    """
+    Display the profile page of the current user.
+    """
     user_to_find = flask_login.current_user.id
     user = db.users.find_one({"_id": ObjectId(user_to_find)})
 
-    user_profile = {
+    user = {
         "username": user["username"],
         "bio": user["bio"],
         "pic": user["pic"],
     }
-    user_items = list(db.items.find({"user": ObjectId(user_to_find)}))
-    return render_template("viewProfile.html", user=user_profile, docs=user_items)
+    items = list(db.items.find({"user": ObjectId(user_to_find)}))
+    # TODO: combine with view_listing
+    # return render_template("viewlisting.html", docs=items)
+    # TODO: append friend pic and username
+    # friends_list = list(user["friends"])
+    # friends = []
+    # for friend in friends_list:
+    #     current_friend = db.users.find_one({"_id": ObjectId(friend)})
+    #     friend_info = {
+    #         "pic": current_friend["pic"],
+    #         "username": current_friend["username"],
+    #     }
+    #     friends.append(friend_info)
+    # return render_template("friends.html", friends=friends)
+    return render_template("viewProfile.html", user=user, items=items)
 
 
-@app.route("/viewUser/<user_name>", methods=["GET"])
+@app.route("/edit-profile/", methods=["GET", "POST"])
 @flask_login.login_required
-def view_user(user_name):
-    # gets the other user profile
-    user = db.users.find_one({"username": user_name})
-    if user["_id"] == flask_login.current_user.id:
-        return redirect(url_for("profile"))
-    user_profile = {
+def edit_profile():
+    """
+    Allow the current user to edit their profile details.
+    """
+    if request.method == "POST":
+        bio = request.form["bio"]
+        pic = request.form["pic"]
+        db.users.update_one(
+            {"_id": ObjectId(flask_login.current_user.get_id())},
+            {"$set": {"bio": bio, "pic": pic}},
+        )
+        return redirect(url_for("view_profile"))
+
+    user_id = flask_login.current_user.id
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+
+    user = {
         "username": user["username"],
         "bio": user["bio"],
         "pic": user["pic"],
     }
-    user_items = list(db.items.find({"user": ObjectId(user["_id"])}))
+
+    return render_template("editProfile.html", user=user)
+
+
+@app.route("/u/<username>", methods=["GET"])
+@flask_login.login_required
+def view_user(username):
+    """
+    Display the profile page of a specified user.
+    """
+    # gets the other user profile
+    user = db.users.find_one({"username": username})
+    if user["_id"] == flask_login.current_user.get_id():
+        return redirect(url_for("profile"))
+
+    user = {
+        "username": user["username"],
+        "bio": user["bio"],
+        "pic": user["pic"],
+    }
+    items = list(db.items.find({"user": ObjectId(user["_id"])}))
+
     # checks if user is in logged in user's friends
-    logged_in_user = db.users.find_one({"_id": ObjectId(flask_login.current_user.id)})
+    logged_in_user = db.users.find_one(
+        {"_id": ObjectId(flask_login.current_user.get_id())}
+    )
     print(list(logged_in_user["friends"]))
     logged_in_user_friends = list(logged_in_user["friends"])
     if user["_id"] in logged_in_user_friends:
@@ -470,62 +537,33 @@ def view_user(user_name):
         print("false")
 
     return render_template(
-        "viewUserProfile.html", user=user_profile, docs=user_items, friends=friends
+        "viewUserProfile.html", user=user, items=items, friends=friends
     )
 
 
-@app.route("/editProfile/", methods=["GET", "POST"])
+@app.route("/add-follower/<username>", methods=["GET"])
 @flask_login.login_required
-def edit_profile():
-    if request.method == "POST":
-        bio = request.form["bio"]
-        pic = request.form["pic"]
-        db.users.update_one(
-            {"_id": ObjectId(flask_login.current_user.id)},
-            {"$set": {"bio": bio, "pic": pic}},
-        )
-        return redirect(url_for("profile"))
-    user = db.users.find_one({"_id": ObjectId(flask_login.current_user.id)})
-    return render_template("editProfile.html", user=user)
+def add_follower(username):
+    """
+    Add a user as a friend.
+    """
+    user = db.users.find_one({"username": username})
 
+    follower = db.users.find_one({"_id": ObjectId(flask_login.current_user.get_id())})
 
-@app.route("/addFriend/<user_name>", methods=["GET"])
-@flask_login.login_required
-def add_friend(user_name):
-    user = db.users.find_one({"username": user_name})
-    logged_in_user = db.users.find_one({"_id": ObjectId(flask_login.current_user.id)})
-    logged_in_user_friends = list(logged_in_user["friends"])
-    if user["_id"] in logged_in_user_friends:
-        return redirect(url_for("view_user", user_name=user_name))
+    following = list(follower["friends"])
+    if user["_id"] in following:
+        return redirect(url_for("view_user", username=username))
 
     db.users.update_one(
-        {"_id": ObjectId(flask_login.current_user.id)},
-        {"$push": {"friends": user["_id"]}},
+        {"_id": ObjectId(flask_login.current_user.get_id())},
+        {"$push": {"following": user["_id"]}},
     )
-    return redirect(url_for("view_user", user_name=user_name))
-
-
-@app.route("/friends", methods=["GET"])
-@flask_login.login_required
-def friends():
-    user = db.users.find_one({"_id": ObjectId(flask_login.current_user.id)})
-    friends_list = list(user["friends"])
-    print(friends_list)
-    friends = []
-    for friend in friends_list:
-        current_friend = db.users.find_one({"_id": ObjectId(friend)})
-        print(current_friend["username"])
-        friend_info = {
-            "pic": current_friend["pic"],
-            "username": current_friend["username"],
-        }
-        friends.append(friend_info)
-    print(friends)
-    return render_template("friends.html", friends=friends)
+    return redirect(url_for("view_user", username=username))
 
 
 if __name__ == "__main__":
-    # Verify the connection works by pinging the database.
+    # verify the connection works by pinging the database
     try:
         client.admin.command("ping")
         print(" * Connected to MongoDB!")
